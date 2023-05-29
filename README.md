@@ -14,7 +14,7 @@
   - [x] Mouse Button by CLX + QE
   - [x] Vertical Scroll Control by CLX + RF
   - [ ] Horizon Scroll Control by CLX + Shift + RF
-- [x] CLX + HJKL g
+- [x] CLX + HJKL
 - [ ] Desktop Switch
   - [x] CLX + 12 = Left Desktop or Right Desktop
   - [ ] CLX + 12345678 Jump to that Desktop
