@@ -49,3 +49,7 @@ go build
 
 bash watch.sh
 ```
+
+### References
+
+- https://www.reddit.com/r/MacOS/comments/wj1cyt/make_the_caps_lock_key_useful/

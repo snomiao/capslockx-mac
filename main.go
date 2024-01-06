@@ -4,6 +4,8 @@ package main
 
 import (
 	"math"
+
+	"os"
 	"time"
 
 	"github.com/andybrewer/mack"
@@ -17,7 +19,7 @@ func mainThread() {
 	unspacex := func() {}
 
 	mousePushX, mousePushY := pusher(
-		func(dx int, dy int) {
+		func(dx int, dy int, k int) {
 			// println("M", dx, dy)
 			if dx != 0 || dy != 0 {
 				robotgo.MoveRelative(dx, dy)
@@ -25,26 +27,56 @@ func mainThread() {
 		},
 		1080, 1080,
 		8192, 8192,
+		false,
 	)
 	arrowPushX, arrowPushY := pusher(
-		func(dx int, dy int) {
-			// println("A", dx, dy)
-			// mods := modsDecode(k)
+		func(dx int, dy int, k int) {
+			println("arrow", dx, dy, k)
+			mods := modsDecode(k)
+			tap := func(o string, t int) {
+				for i := 0; i < t; i++ {
+					if len(mods) == 0 {
+						robotgo.KeyTap(o)
+					} else {
+						robotgo.KeyTap(o, mods)
+					}
+				}
+			}
+			if dx > 0 {
+				tap("right", dx)
+			}
+			if dx < 0 {
+				tap("left", -dx)
+			}
+			if dy > 0 {
+				tap("up", dy)
+			}
+			if dy < 0 {
+				tap("down", -dy)
+			}
 		},
-		1, 1,
-		16, 16,
+		96, 96,
+		2048, 2048,
+		true,
 	)
 	wheelPushX, wheelPushY := pusher(
-		func(dx int, dy int) {
+		func(dx int, dy int, k int) {
 			// println("W", dx, dy)
 			if dx != 0 || dy != 0 {
-				robotgo.Scroll(0, -dy)
+				if k&int(hotkey.ModShift) != 0 {
+					robotgo.Scroll(dx, 0)
+				} else {
+					robotgo.Scroll(0, -dy)
+
+				}
+
 			}
 			// robotgo.MoveRelative(dx, dy)
 			// mods := modsDecode(k)
 		},
 		192, 192,
-		32768, 32768,
+		2147483647, 2147483647,
+		false,
 	)
 	// downer
 	// ()
@@ -66,10 +98,9 @@ func mainThread() {
 	// return unspacex()
 }
 func spacex(tap func(),
-	mousePushX func(float64), mousePushY func(float64),
-	arrowPushX func(float64), arrowPushY func(float64),
-	wheelPushX func(float64), wheelPushY func(float64),
-
+	mousePushX func(float64, int), mousePushY func(float64, int),
+	arrowPushX func(float64, int), arrowPushY func(float64, int),
+	wheelPushX func(float64, int), wheelPushY func(float64, int),
 ) func() {
 	unclxedit := func() {}
 	unclxdesktop := func() {}
@@ -99,35 +130,75 @@ func spacex(tap func(),
 
 func clxmouse(
 	act func(),
-	mousePushX func(float64), mousePushY func(float64),
-	wheelPushX func(float64), wheelPushY func(float64),
+	mousePushX func(float64, int), mousePushY func(float64, int),
+	wheelPushX func(float64, int), wheelPushY func(float64, int),
 ) func() {
 	unregs := []func(){
 		modsreg(hotkey.KeyA,
-			func(k int, d int) { act(); mousePushX(-1) },
-			func() { mousePushX(0) }),
+			func(k int, d int) {
+				act()
+				println("mousePushX")
+				mousePushX(-1, 0)
+			},
+			func() {
+				println("mousePushX")
+				mousePushX(0, 0)
+			}),
 		modsreg(hotkey.KeyD,
-			func(k int, d int) { act(); mousePushX(1) },
-			func() { mousePushX(0) }),
+			func(k int, d int) {
+				act()
+				println("mousePushX")
+				mousePushX(1, 0)
+			},
+			func() {
+				println("mousePushX")
+				mousePushX(0, 0)
+			}),
 		modsreg(hotkey.KeyW,
-			func(k int, d int) { act(); mousePushY(-1) },
-			func() { mousePushY(0) }),
+			func(k int, d int) {
+				act()
+				println("mousePushY")
+				mousePushY(-1, 0)
+			},
+			func() {
+				println("mousePushY")
+				mousePushY(0, 0)
+			}),
 		modsreg(hotkey.KeyS,
-			func(k int, d int) { act(); mousePushY(1) },
-			func() { mousePushY(0) }),
+			func(k int, d int) {
+				act()
+				println("mousePushY")
+				mousePushY(1, 0)
+			},
+			func() {
+				println("mousePushY")
+				mousePushY(0, 0)
+			}),
 		modsreg(hotkey.KeyR,
-			func(k int, d int) { act(); wheelPushY(-10) },
-			func() { wheelPushY(0) }),
+			func(k int, d int) { act(); wheelPushY(-10, 0) },
+			func() { wheelPushY(0, 0) }),
 		modsreg(hotkey.KeyF,
-			func(k int, d int) { act(); wheelPushY(10) },
-			func() { wheelPushY(0) }),
+			func(k int, d int) { act(); wheelPushY(10, 0) },
+			func() { wheelPushY(0, 0) }),
 		// TODO HOLD
 		modsreg(hotkey.KeyE,
-			func(k int, taps int) { act(); robotgo.Toggle("left") },
-			func() { act(); robotgo.Toggle("left", "up") }),
+			func(k int, taps int) {
+				act()
+				robotgo.Toggle("left")
+			},
+			func() {
+				act()
+				robotgo.Toggle("left", "up")
+			}),
 		modsreg(hotkey.KeyQ,
-			func(k int, taps int) { act(); robotgo.Toggle("right") },
-			func() { act(); robotgo.Toggle("right", "up") }),
+			func(k int, taps int) {
+				act()
+				robotgo.Toggle("right")
+			},
+			func() {
+				act()
+				robotgo.Toggle("right", "up")
+			}),
 	}
 	return func() {
 		for _, unreg := range unregs {
@@ -151,11 +222,31 @@ func clxdesktop(act func()) func() {
 			},
 			func() {},
 		),
-		// kVK_ANSI_d2
+		// kVK_ANSI_2
 		modsreg(0x13,
 			func(k int, taps int) {
 				// robotgo.KeyTap("right", "control");
 				mack.Tell("System Events", "key code 124 using {control down}")
+				act()
+			},
+			func() {},
+		),
+		// kVK_ANSI_Slash
+		modsreg(0x2C,
+			func(k int, taps int) {
+				// robotgo.KeyTap("right", "control");
+				os.Exit(0)
+				// touchMain()
+				act()
+			},
+			func() {},
+		),
+		// kVK_ANSI_Backslash
+		modsreg(0x2A,
+			func(k int, taps int) {
+				// robotgo.KeyTap("right", "control");
+				// touchMain()
+				os.Exit(0)
 				act()
 			},
 			func() {},
@@ -167,50 +258,34 @@ func clxdesktop(act func()) func() {
 		}
 	}
 }
-func clxedit(act func(),
-	arrowPushX func(float64), arrowPushY func(float64),
-) func() {
 
-	unturboT := turboKey(hotkey.KeyT, "delete", act)
-	unturboG := turboKey(hotkey.KeyG, "enter", act)
-	//
-	unturboH := turboKey(hotkey.KeyH, "left", act)
-	unturboJ := turboKey(hotkey.KeyJ, "down", act)
-	unturboK := turboKey(hotkey.KeyK, "up", act)
-	unturboL := turboKey(hotkey.KeyL, "right", act)
-	//
-	unturboY := turboKey(hotkey.KeyY, "home", act)
-	unturboO := turboKey(hotkey.KeyO, "end", act)
-	unturboU := turboKey(hotkey.KeyU, "pagedown", act)
-	unturboI := turboKey(hotkey.KeyI, "pageup", act)
-	//
-	// kVK_ANSI_RightBracket         = 0x1E,
-	// kVK_ANSI_LeftBracket          = 0x21,
-	// unturboLB := turboTap(hotkey.Key(0x21), func(k int, taps int) {
-	// 	robotgo.KeyTap("tab", "shift")
-	// }, act)
-	// unturboRB := turboTap(hotkey.Key(0x1E), func(k int, taps int) {
-	// 	robotgo.KeyTap("tab")
-	// }, act)
-	unturboP := turboTap(hotkey.KeyP, func(k int, taps int) {
-		robotgo.KeyTap("tab", "shift")
-	}, act)
-	unturboN := turboTap(hotkey.KeyN, func(k int, taps int) {
-		robotgo.KeyTap("tab")
-	}, act)
+func clxedit(act func(),
+	arrowPushX func(float64, int), arrowPushY func(float64, int),
+) func() {
+	unregs := []func(){
+		turboKey(hotkey.KeyT, "delete", act),
+		turboKey(hotkey.KeyG, "enter", act),
+		//
+		turboKey(hotkey.KeyH, "left", act),
+		turboKey(hotkey.KeyJ, "down", act),
+		turboKey(hotkey.KeyK, "up", act),
+		turboKey(hotkey.KeyL, "right", act),
+		//
+		turboKey(hotkey.KeyY, "home", act),
+		turboKey(hotkey.KeyO, "end", act),
+		turboKey(hotkey.KeyU, "pagedown", act),
+		turboKey(hotkey.KeyI, "pageup", act),
+		//
+		turboTap(hotkey.KeyP, func(k int, taps int) {
+			robotgo.KeyTap("tab", "shift")
+		}, act),
+		turboTap(hotkey.KeyN, func(k int, taps int) {
+			robotgo.KeyTap("tab")
+		}, act)}
 	return func() {
-		unturboT()
-		unturboG()
-		unturboH()
-		unturboJ()
-		unturboK()
-		unturboL()
-		unturboY()
-		unturboO()
-		unturboU()
-		unturboI()
-		unturboP()
-		unturboN()
+		for _, unreg := range unregs {
+			unreg()
+		}
 	}
 }
 func turboKey(i hotkey.Key, o string, act func()) func() {
@@ -246,39 +321,40 @@ func turboTap(i hotkey.Key, tap func(k int, taps int), act func()) func() {
 	}
 }
 
-func turboMove(i hotkey.Key, move func(k int, distance int), act func()) func() {
-	t := int64(0)
-	unreg := modsreg(i,
-		func(kk int, k int) {
-			if t != 0 {
-				return
-			}
-			t = time.Now().UnixNano() / int64(time.Millisecond)
-			act()
-			go func() {
-				tracking := 0
-				for t != 0 {
-					ct := time.Now().UnixNano() / int64(time.Millisecond)
-					dt := (ct - t)
-					P := 0.2
-					B := 1.1
-					E := 0.1
-					distance := math.Max(0.0, math.Min(
-						P*(math.Pow(B, 1+E*float64(dt))),
-						2147483647.0))
-					diff := int(distance) - tracking
-					tracking += diff
-					move(k, diff)
-					time.Sleep(time.Millisecond * time.Duration(1))
-				}
-			}()
-		},
-		func() { t = 0 })
-	return func() {
-		t = 0
-		unreg()
-	}
-}
+// func turboMove(i hotkey.Key, move func(k int, distance int), act func()) func() {
+// 	t := int64(0)
+// 	unreg := modsreg(i,
+// 		func(kk int, k int) { vb bb
+// 			if t != 0 {
+// 				return
+// 			}
+// 			t = time.Now().UnixNano() / int64(time.Millisecond)
+// 			act()
+// 			go func()
+
+// 				tracking := 0
+// 				for t != 0 {
+// 					ct := time.Now().UnixNano() / int64(time.Millisecond)
+// 					dt := (ct - t)
+// 					P := 0.2
+// 					B := 1.1
+// 					E := 0.1
+// 					distance := math.Max(0.0, math.Min(
+// 						P*(math.Pow(B, 1+E*float64(dt))),
+// 						2147483647.0))
+// 					diff := int(distance) - tracking
+// 					tracking += diff
+// 					move(k, diff)
+// 					time.Sleep(time.Millisecond * time.Duration(1))
+// 				}
+// 			}()
+// 		},
+// 		func() { t = 0 })
+// 	return func() {
+// 		t = 0
+// 		unreg()
+// 	}
+// }
 
 /*
 	enum {
@@ -350,24 +426,41 @@ func turboMove(i hotkey.Key, move func(k int, distance int), act func()) func() 
 	  };
 */
 func pusher(
-	ctrl func(dx int, dy int),
+	ctrl func(dx int, dy int, k int),
 	px float64, py float64,
 	maxVx float64, maxVy float64,
+	rush bool,
 ) (
-	func(fx float64), func(fy float64),
+	func(fx float64, kx int), func(fy float64, ky int),
 ) {
+	now := func() float64 {
+		t := float64(time.Now().UnixMicro()) / float64(1000000)
+		// println(int64(t)) // seconds
+		return t
+	}
+	// pusher1d := func() (func(dt float64), func()) {
+	// 	x := float64(0)
+	// 	v := float64(0)
+	// 	a := float64(0)
+	// 	return func(dt float64) {
+	// 		v = dt * a
+	// 		x = dt * v
+	// 	},
+	// 	func(f float64) { a = f },
+	// };
+	// iterX, pusherX := pusher1d()
 	x := float64(0)
 	vx := float64(0)
 	ax := float64(0)
 	fx := float64(0)
+	kx := int(0) // mod key
+
 	y := float64(0)
 	vy := float64(0)
 	ay := float64(0)
 	fy := float64(0)
+	ky := int(0) // mod key
 	t := float64(0)
-	now := func() float64 {
-		return float64(time.Now().UnixMicro()) / float64(1000000)
-	}
 	go func() {
 		escaped := false
 		for !escaped {
@@ -378,40 +471,60 @@ func pusher(
 			pow := float64(1.8)
 
 			ax = fx
-			vx = vx + ax*math.Pow(dt*px, pow)
+			vx = vx + ax*math.Pow(dt*px, pow*1.2)*0.5
 			vx = math.Max(-maxVx, math.Min(vx, maxVx))
+			frictionx := math.Pow(0.95, dt*300)
 			if ax == 0 {
-				vx = vx * 0.9
+				vx = vx * frictionx
 			}
 			x1 := x + vx*dt
 			dx := int(x1 - x)
 			x = x + float64(dx)
 
 			ay = fy
-			vy = vy + ay*math.Pow(dt*py, pow)
+			vy = vy + ay*math.Pow(dt*py, pow*1.2)*0.5
 			vy = math.Max(-maxVy, math.Min(vy, maxVy))
-			if ax == 0 {
-				vy = vy * 0.9
+			frictiony := math.Pow(0.95, dt*300)
+			if ay == 0 {
+				vy = vy * frictiony
 			}
 			y1 := y + vy*dt
 			dy := int(y1 - y)
 			y = y + float64(dy)
-			ctrl(dx, dy)
+			if dx != 0 || dy != 0 {
+				ctrl(dx, dy, kx|ky)
+			}
 			// model debug
 			// println(dx, int(x), int(vx), int(ax), int(dt*1000))
 			time.Sleep(time.Millisecond * time.Duration(10))
 		}
 	}()
-	return func(pfx float64) {
+	return func(pfx float64, pkx int) {
+			// println("pf", pkx, pfx)
 			if pfx != 0 {
 				t = now()
 			}
 			fx = pfx
+			kx = pkx
 		},
-		func(pfy float64) {
+		func(pfy float64, pky int) {
+			// println("pf", pky, pfy)
 			if pfy != 0 {
 				t = now()
 			}
 			fy = pfy
+			ky = pky
 		}
 }
+
+// func touchMain() {
+// 	f, err := os.OpenFile("main.go",
+// 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// 	if err != nil {
+// 		// log.Println(err)
+// 	}
+// 	defer f.Close()
+// 	if _, err := f.WriteString("// touched\n"); err != nil {
+// 		// log.Println(err)
+// 	}
+// }
