@@ -29,3 +29,4 @@ jobs:
           files: main-executable-${{ matrix.os }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Error: ⚠️ GitHub Releases requires a tag
