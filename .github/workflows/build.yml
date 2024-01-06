@@ -5,9 +5,12 @@ on:
       - main
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -17,5 +20,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: main-executable
+          name: main-executable-${{ matrix.os }}
           path: ./main
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: main-executable-${{ matrix.os }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
