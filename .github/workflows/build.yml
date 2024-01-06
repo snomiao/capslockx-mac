@@ -8,8 +8,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # os: [macos-latest, windows-latest]
-        os: [macos-latest]
+        # os: [macos-latest]
+        os: [macos-latest, windows-latest]
         # os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
           TAG=v$(date -Iseconds | sed 's/[T:\+]/-/g')
           echo "$TAG"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
+          git tag -a $TAG -m "Published version $TAG-${{ matrix.os }}" ${GITHUB_SHA}
           git push origin $TAG
       - name: Release
         uses: softprops/action-gh-release@v1
